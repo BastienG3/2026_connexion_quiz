@@ -1,0 +1,11 @@
+ID,QUESTION_TEXT_FR,QUESTION_TEXT_EN,ORDER
+1,Stratégie Data - Votre organisation a-t-elle une vision claire de l’usage de la data ?,Data Strategy – Does your organization have a clear vision for how data should be used?,1
+2,Gouvernance - Qui est responsable de la data dans votre organisation ?,Governance – Who is responsible for data within your organization?,2
+3,Qualité - Comment évalueriez-vous la qualité globale de vos données ?,Data Quality – How would you rate the overall quality of your data?,3
+4,Outils & architecture - Comment sont stockées et exploitées vos données ?,Tools & Architecture – How are your data stored and leveraged?,4
+5,Accès à l’info - Les utilisateurs peuvent-ils accéder facilement aux bonnes données ?,Access to Information – Can users easily access the right data?,5
+6,KPI - Vos indicateurs de performance (KPI) sont-ils bien définis ?,KPIs – Are your key performance indicators clearly defined?,6
+7,Compétences - Le niveau de compétences data en interne est :,Skills – The level of internal data skills is:,7
+8,Culture - La data est-elle utilisée pour décider ?,Culture – Is data used to support decision-making?,8
+9,Sécurité & conformité - Comment est gérée la sécurité des données ?,Security & Compliance – How is data security managed?,9
+10,"Innovation & IA - Utilisez-vous des cas avancés (IA, prédictif, automatisation) ?","Innovation & AI – Are you using advanced use cases (AI, predictive analytics, automation)?",10

@@ -1,0 +1,6 @@
+create or replace TABLE QUESTIONS (
+	ID NUMBER(38,0) autoincrement start 1 increment 1 noorder,
+	QUESTION_TEXT_FR VARCHAR(16777216),
+	QUESTION_TEXT_EN VARCHAR(16777216),
+	"ORDER" NUMBER(38,0)
+);

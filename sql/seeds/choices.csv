@@ -1,0 +1,41 @@
+ID,QUESTION_ID,CHOICE_TEXT_FR,CHOICE_TEXT_EN,VALUE,SCORE
+101,1,"Non, aucune stratégie définie",No defined strategy,Q1_OPT1,1
+102,1,"Une réflexion existe, mais rien de formalisé","Initial brainstorming, but nothing formalized",Q1_OPT2,2
+103,1,Une stratégie data est définie et partagée,A data strategy is defined and shared,Q1_OPT3,3
+104,1,La data est au cœur des décisions stratégiques,Data is at the core of strategic decisions,Q1_OPT4,4
+105,2,Personne clairement identifié,No clearly defined owner,Q2_OPT1,1
+106,2,Une responsabilité partielle ou informelle,Partial or informal responsibility,Q2_OPT2,2
+107,2,Un rôle ou comité data existe,A data role or committee exists,Q2_OPT3,3
+108,2,Une gouvernance data structurée et active,A structured and active data governance exists,Q2_OPT4,4
+109,3,"Faible (erreurs fréquentes, manque de fiabilité)","Low (frequent errors, low reliability)",Q3_OPT1,1
+110,3,Acceptable mais variable selon les sujets,Acceptable but inconsistent across topics,Q3_OPT2,2
+111,3,"Bonne, avec des contrôles en place","Good, with controls in place",Q3_OPT3,3
+112,3,Très élevée et pilotée en continu,Very high and continuously monitored,Q3_OPT4,4
+113,4,Fichiers Excel / outils disparates,Excel files / disparate tools,Q4_OPT1,1
+114,4,"ERP / BI basique, peu intégrée","Basic ERP / BI, poorly integrated",Q4_OPT2,2
+115,4,Plateforme BI / cloud partiellement intégrée,Partially integrated BI / cloud platform,Q4_OPT3,3
+116,4,Plateforme data moderne et centralisée,Modern and centralized data platform,Q4_OPT4,4
+117,5,Très difficilement,Very difficult,Q5_OPT1,1
+118,5,Avec l’aide de l’IT ou d’analystes,With help from IT or analysts,Q5_OPT2,2
+119,5,Via des tableaux de bord standardisés,Through standardized dashboards,Q5_OPT3,3
+120,5,"En autonomie complète, avec self-service BI","Fully autonomous, with self-service BI",Q5_OPT4,4
+121,6,Non ou très partiellement,No or very partially,Q6_OPT1,1
+122,6,"Oui, mais hétérogènes","Yes, but heterogeneous",Q6_OPT2,2
+123,6,"Oui, partagés et suivis régulièrement","Yes, shared and regularly monitored",Q6_OPT3,3
+124,6,"Oui, alignés avec la stratégie et automatisés","Yes, aligned with strategy and automated",Q6_OPT4,4
+125,7,Faible,Low,Q7_OPT1,1
+126,7,Présent chez quelques personnes clés,Present among a few key people,Q7_OPT2,2
+127,7,Structuré avec des rôles identifiés,Structured with clearly defined roles,Q7_OPT3,3
+128,7,Diffus largement (culture data),Widely spread across the organization (data culture),Q7_OPT4,4
+129,8,Rarement,Rarely,Q8_OPT1,1
+130,8,Occasionnellement,Occasionally,Q8_OPT2,2
+131,8,"Souvent, pour piloter l’activité","Often, to steer activity",Q8_OPT3,3
+132,8,"Systématiquement, à tous les niveaux","Systematically, at all levels",Q8_OPT4,4
+133,9,Peu ou pas prise en compte,Little or not taken into account,Q9_OPT1,1
+134,9,Mesures basiques,Basic measures,Q9_OPT2,2
+135,9,Politique sécurité + conformité en place,Security policy + compliance in place,Q9_OPT3,3
+136,9,"Sécurité, conformité et traçabilité avancées","Advanced security, compliance and traceability",Q9_OPT4,4
+137,10,Pas du tout,Not at all,Q10_OPT1,1
+138,10,En réflexion ou en POC,Under consideration or in POC,Q10_OPT2,2
+139,10,Sur quelques cas métiers,On a few business use cases,Q10_OPT3,3
+140,10,À grande échelle et de façon industrielle,At scale and industrialized,Q10_OPT4,4
