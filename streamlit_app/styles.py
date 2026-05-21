@@ -496,7 +496,7 @@ GLOBAL_CSS = """
 """
 
 CANVAS_MARKUP = '<canvas id="plexus-canvas"></canvas>'
-LOGO_URL = "images/KPC23-Logotype-baseline-sans-fond-01_cropped.png" #"https://kpcgroup.fr/wp-content/uploads/2023/10/KPC23-Logo-seul-color.png.webp"
+LOGO_URL = "images/KPC23-Logotype-baseline-sans-fond-01_cropped_simple.png" #"https://kpcgroup.fr/wp-content/uploads/2023/10/KPC23-Logo-seul-color.png.webp"
 
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:

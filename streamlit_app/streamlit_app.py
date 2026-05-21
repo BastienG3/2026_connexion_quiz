@@ -9,14 +9,14 @@ import styles
 from plexus import PLEXUS_HTML
 import streamlit.components.v1 as components
 
-def band_from_score(score):
+def band_from_score(score, lang):
     if score <= 17:
-        return "initial"
+        return 1
     if score <= 25:
-        return "build"
+        return 2
     if score <= 32:
-        return "advanced"
-    return "leader"
+        return 3
+    return 4
 
 # --- CONFIG ---
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
@@ -24,6 +24,8 @@ st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 st.markdown(styles.load_fonts(), unsafe_allow_html=True)
 st.markdown(styles.GLOBAL_CSS + styles.CANVAS_MARKUP, unsafe_allow_html=True)
 components.html(PLEXUS_HTML, height=0, width=0)
+
+session = get_active_session()
 
 ################################################
 # HEADER 
@@ -49,7 +51,7 @@ lang = st.radio(
     )
 st.session_state["lang"] = lang
  
-st.markdown('<div style="height:10vh;"></div>', unsafe_allow_html=True)
+st.markdown('<div style="height:8vh;"></div>', unsafe_allow_html=True)
 
 
 ################################################
@@ -79,14 +81,37 @@ if st.session_state["show_home"]:
         ):
             st.session_state["show_home"] = False
             st.rerun()
+            
+        try:
+            count_data = session.sql("SELECT COUNT(*) AS TOTAL_COUNT FROM PROSPECTS").collect()
+            total_registered = count_data[0]['TOTAL_COUNT']
+            
+            if total_registered > 0:
+                counter_msg = f"Déjà {total_registered} participants !" if lang == "FR" else f"Join {total_registered} other participants!"
+                
+                st.markdown(
+                    f"""
+                    <div style="color: #888888; font-size: 14px; z-index: 9999;">
+                    <i>{counter_msg}</i>
+                    </div>
+                    """, 
+                    unsafe_allow_html=True
+                )
+        except Exception:
+            pass    
  
     with home_mid_right:
    
+        #qr_url = (
+        #    "https://api.qrserver.com/v1/create-qr-code/?size=200x200"
+        #    "&data=https%3A%2F%2Flinktr.ee%2Fgroupekpc"
+        #    "%3Futm_source%3Dlinktree_profile_share"
+        #    "%26ltsid%3Dab18f1ca-e451-4beb-aece-22d5c6279f46"
+        #)
+
         qr_url = (
             "https://api.qrserver.com/v1/create-qr-code/?size=200x200"
-            "&data=https%3A%2F%2Flinktr.ee%2Fgroupekpc"
-            "%3Futm_source%3Dlinktree_profile_share"
-            "%26ltsid%3Dab18f1ca-e451-4beb-aece-22d5c6279f46"
+            "&data=https%3A%2F%2Fkpcgroup.fr%2Fen%2Ftechnological-partners%2Fkpc-canada-your-data-it-partner-in-montreal%2F"
         )
      
         st.markdown(
@@ -97,11 +122,9 @@ if st.session_state["show_home"]:
             ),
             unsafe_allow_html=True,
         )
-
+    
     st.stop()
 
-
-session = get_active_session()
  
 if "prospect_id" not in st.session_state:
     st.session_state["prospect_id"] = str(uuid4())
@@ -120,90 +143,116 @@ nb_questions = len(questions)
 # END SCREEN 
 ################################################
 if st.session_state["q_index"] >= nb_questions:
- 
-    score = session.sql(f"""
-        SELECT SUM(c.SCORE) AS TOTAL_SCORE
-        FROM RESULTS r
-        JOIN CHOICES c ON c.VALUE = r.ANSWER_VALUE
-        WHERE r.PROSPECT_ID = '{st.session_state["prospect_id"]}'
-    """).collect()
- 
-    band = band_from_score(score[0]['TOTAL_SCORE'])
-    band_info = session.table("RESULT_BANDS").filter(f"BAND = '{band}'").collect()[0]
-    text = band_info["TEXT_" + lang]
-    pitch = band_info["PITCH_" + lang]
- 
-    st.markdown(
-        styles.result_card_html(
-            eyebrow=constants.texts[lang]['maturity_msg'],
-            band_name=band.capitalize(),
-            text=text,
-            pitch=pitch,
-        ),
-        unsafe_allow_html=True,
-    )
- 
-    st.markdown('<div class="kpc-quiz kpc-fade-in">', unsafe_allow_html=True)
-    st.markdown(
-        f'<h3 class="kpc-section-title">{constants.texts[lang]["informations_msg"]}</h3>',
-        unsafe_allow_html=True,
-    )
- 
-    col_a, col_b = st.columns(2)
-    with col_a:
-        name = st.text_input(constants.texts[lang]['info_name'])
-    with col_b:
-        company = st.text_input(constants.texts[lang]['info_company'])
-    email = st.text_input(constants.texts[lang]['info_email'])
- 
-    if not name or not email:
-        st.error("Merci de remplir les champs obligatoires." if lang == "FR" else "Please fill the required fields.")
+
+    ################################################
+    # LEAD GEN FORM
+    ################################################
+    if not st.session_state.get("form_submitted", False):
+        
+        st.markdown('<div class="kpc-quiz kpc-fade-in">', unsafe_allow_html=True)
+        st.markdown(
+            f'<h3 class="kpc-section-title">{constants.texts[lang]["informations_msg"]}</h3>',
+            unsafe_allow_html=True,
+        )
+     
+        col_a, col_b = st.columns(2)
+        with col_a:
+            name = st.text_input(constants.texts[lang]['info_name'], key="user_name")
+            email = st.text_input(constants.texts[lang]['info_email'], key="user_email")
+        with col_b:
+            company = st.text_input(constants.texts[lang]['info_company'], key="user_company")
+            role = st.text_input(constants.texts[lang]['info_role'], key="user_role")
+     
+        consent = st.checkbox(constants.texts[lang]['contact_checkbox'], key="user_consent")
+     
+        if st.button(
+            constants.texts[lang]['submit_btn'], 
+            key="submit_btn", 
+            type="primary",
+            disabled=not consent
+        ):
+
+            if not name or not email:
+                st.error(constants.texts[lang]['empty_field_msg'])
+                
+            elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                st.error(constants.texts[lang]['invalid_email_msg'])
+                
+            else:
+                safe_name = name.replace("'", "''")
+                safe_company = company.replace("'", "''")
+                safe_email = email.replace("'", "''")
+                safe_role = role.replace("'", "''")
+         
+                session.sql(f"""
+                    MERGE INTO PROSPECTS AS tgt
+                    USING (
+                        SELECT
+                            '{st.session_state["prospect_id"]}' AS PROSPECT_ID,
+                            '{safe_name}' AS NAME,
+                            '{safe_company}' AS COMPANY,
+                            '{safe_email}' AS EMAIL,
+                            '{safe_role}' AS ROLE,
+                            {1 if consent else 0} AS CONSENT
+                        ) AS src
+                        ON tgt.PROSPECT_ID = src.PROSPECT_ID
+                        AND tgt.EMAIL = src.EMAIL
+                    WHEN MATCHED THEN
+                        UPDATE SET
+                            NAME = src.NAME,
+                            COMPANY = src.COMPANY,
+                            CONSENT = src.CONSENT
+                    WHEN NOT MATCHED THEN INSERT(
+                        PROSPECT_ID, NAME, COMPANY, EMAIL, CONSENT
+                    ) VALUES (
+                        src.PROSPECT_ID, src.NAME, src.COMPANY, src.EMAIL, src.CONSENT
+                    )
+                    """).collect()
+         
+                st.success(constants.texts[lang]['saved_info_msg'])
+                
+                # Flip the state to True and rerun to hide the form and show the results
+                st.session_state["form_submitted"] = True
+                st.rerun()
+     
         st.markdown('</div>', unsafe_allow_html=True)
         st.stop()
-    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-        st.error("Email invalide" if lang == "FR" else "Invalid email")
-        st.markdown('</div>', unsafe_allow_html=True)
+
+    ################################################
+    # RESULT CARD
+    ################################################
+    else:
+        score = session.sql(f"""
+            SELECT SUM(c.SCORE) AS TOTAL_SCORE
+            FROM RESULTS r
+            JOIN CHOICES c ON c.VALUE = r.ANSWER_VALUE
+            WHERE r.PROSPECT_ID = '{st.session_state["prospect_id"]}'
+        """).collect()
+     
+        maturity_level = band_from_score(score[0]['TOTAL_SCORE'], lang)
+        band_info = session.table("RESULT_BANDS").filter(f"MATURITY_LEVEL = '{maturity_level}'").collect()[0]
+        text = band_info["TEXT_" + lang]
+        pitch = band_info["PITCH_" + lang]
+        band_name = constants.texts[lang]['maturity_level_' + str(maturity_level)]
+     
+        st.markdown(
+            styles.result_card_html(
+                eyebrow=constants.texts[lang]['maturity_msg'],
+                band_name=band_name.capitalize(),
+                text=text,
+                pitch=pitch,
+            ),
+            unsafe_allow_html=True,
+        )
+
+        # Allow the user to return home manually after they finish reading
+        home_btn_label = "Retour à l'accueil" if lang == "FR" else "Return to Home"
+        
+        if st.button(home_btn_label, key="return_home_btn"):
+            st.session_state.clear()
+            st.session_state["show_home"] = True
+            st.rerun()
         st.stop()
- 
-    consent = st.checkbox(constants.texts[lang]['contact_checkbox'])
- 
-    if st.button(constants.texts[lang]['submit_btn'], key="submit_btn", type="primary"):
-        safe_name = name.replace("'", "''")
-        safe_company = company.replace("'", "''")
-        safe_email = email.replace("'", "''")
- 
-        session.sql(f"""
-            MERGE INTO PROSPECTS AS tgt
-            USING (
-                SELECT
-                    '{st.session_state["prospect_id"]}' AS PROSPECT_ID,
-                    '{safe_name}' AS NAME,
-                    '{safe_company}' AS COMPANY,
-                    '{safe_email}' AS EMAIL,
-                    {1 if consent else 0} AS CONSENT
-                ) AS src
-                ON tgt.PROSPECT_ID = src.PROSPECT_ID
-                AND tgt.EMAIL = src.EMAIL
-            WHEN MATCHED THEN
-                UPDATE SET
-                    NAME = src.NAME,
-                    COMPANY = src.COMPANY,
-                    CONSENT = src.CONSENT
-            WHEN NOT MATCHED THEN INSERT(
-                PROSPECT_ID, NAME, COMPANY, EMAIL, CONSENT
-            ) VALUES (
-                src.PROSPECT_ID, src.NAME, src.COMPANY, src.EMAIL, src.CONSENT
-            )
-            """).collect()
- 
-        st.success(constants.texts[lang]['saved_info_msg'])
-        time.sleep(5)
-        st.session_state.clear()
-        st.session_state["show_home"] = True
-        st.rerun()
- 
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.stop()
  
  
 ################################################
