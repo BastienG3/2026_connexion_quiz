@@ -73,6 +73,21 @@ def band_from_score(sc: float) -> int:
 # --- CONFIG ---
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 
+
+# remove "created by" footer icon
+st.markdown(
+    """
+<style>
+/* Hide badge "Created by" */
+footer {visibility: hidden;}
+header {visibility: hidden;}
+div[data-testid="stToolbar"] {visibility: hidden;}
+div[data-testid="stDecoration"] {visibility: hidden;}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
 st.markdown(styles.load_fonts(), unsafe_allow_html=True)
 st.markdown(styles.GLOBAL_CSS + styles.CANVAS_MARKUP, unsafe_allow_html=True)
 components.html(PLEXUS_HTML, height=0, width=0)
