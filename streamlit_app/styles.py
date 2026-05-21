@@ -1,6 +1,7 @@
 import os
 import base64
 
+
 def load_font(font_path: str, font_name: str, weight: int = 400) -> str:
     with open(font_path, "rb") as f:
         font_data = base64.b64encode(f.read()).decode("utf-8")
@@ -13,13 +14,15 @@ def load_font(font_path: str, font_name: str, weight: int = 400) -> str:
         font-style: normal;
     }}
     """
-    
+
+
 def load_fonts():
-    fonts = load_font("fonts/Exo/Exo-Medium.ttf", "Exo", weight=500)
-    fonts += load_font("fonts/Exo/Exo-Regular.ttf", "Exo", weight=400)
-    
+    fonts = load_font("streamlit_app/fonts/Exo/Exo-Medium.ttf", "Exo", weight=500)
+    fonts += load_font("streamlit_app/fonts/Exo/Exo-Regular.ttf", "Exo", weight=400)
+
     return f"<style>{fonts}</style>"
-    
+
+
 GLOBAL_CSS = """
 <style>
   :root {
@@ -496,20 +499,23 @@ GLOBAL_CSS = """
 """
 
 CANVAS_MARKUP = '<canvas id="plexus-canvas"></canvas>'
-LOGO_URL = "images/KPC23-Logotype-baseline-sans-fond-01_cropped_simple.png" #"https://kpcgroup.fr/wp-content/uploads/2023/10/KPC23-Logo-seul-color.png.webp"
+LOGO_URL = "streamlit_app/images/KPC23-Logotype-baseline-sans-fond-01_cropped_simple.png"  # "https://kpcgroup.fr/wp-content/uploads/2023/10/KPC23-Logo-seul-color.png.webp"
+
 
 def get_base64_of_bin_file(bin_file):
-    with open(bin_file, 'rb') as f:
+    with open(bin_file, "rb") as f:
         data = f.read()
     return base64.b64encode(data).decode()
- 
+
+
 def logo_chip_html(tagline: str = "Data & Digital Shapers") -> str:
     if not os.path.exists(LOGO_URL):
         return f"<p style='color:red;'>Error: Logo not found at {LOGO_URL}</p>"
     img_base64 = get_base64_of_bin_file(LOGO_URL)
     img_src = f"data:image/png;base64,{img_base64}"
     return f'<img src="{img_src}" alt="KPC" />'
- 
+
+
 def kpc_html(eyebrow, title, subtitle_html, trust_items):
     trust_blocks = "".join(
         f'<div class="kpc-trust-item"><span class="dot" style="background:{color};"></span>{label}</div>'
@@ -521,7 +527,8 @@ def kpc_html(eyebrow, title, subtitle_html, trust_items):
     <p class="kpc-subtitle">{subtitle_html}</p>
     <div class="kpc-trust">{trust_blocks}</div>
     """
- 
+
+
 def qr_card_html(qr_url, title, helper):
     return f"""
     <div class="kpc-qr-card">
@@ -530,7 +537,8 @@ def qr_card_html(qr_url, title, helper):
       <div class="kpc-qr-help">{helper}</div>
     </div>
     """
- 
+
+
 def footer_html(copyright_text, link_text):
     return f"""
     <div class="kpc-footer">
@@ -538,11 +546,13 @@ def footer_html(copyright_text, link_text):
       <div>{link_text}</div>
     </div>
     """
- 
+
+
 ################################################
 # QUIZ HELPERS
 ################################################
- 
+
+
 def quiz_meta_html(counter_text):
     return f"""
     <div class="kpc-quiz kpc-fade-in">
@@ -550,7 +560,8 @@ def quiz_meta_html(counter_text):
         <span class="counter">{counter_text}</span>
       </div>
     """
- 
+
+
 def progress_bar_html(progress):
     pct = max(0, min(100, progress * 100))
     return f"""
@@ -560,12 +571,14 @@ def progress_bar_html(progress):
       </div>
     </div>
     """
- 
+
+
 def question_html(question_num, question_body):
     return f"""
     <h2 class="kpc-question kpc-fade-in"><span class="qnum">{question_num:02d}</span>{question_body}</h2>
     """
- 
+
+
 def result_card_html(eyebrow, band_name, text, pitch):
     return f"""
     <div class="kpc-quiz kpc-fade-in">
@@ -577,4 +590,3 @@ def result_card_html(eyebrow, band_name, text, pitch):
       </div>
     </div>
     """
- 
