@@ -8,6 +8,10 @@ from streamlit_app.plexus import PLEXUS_HTML
 import streamlit.components.v1 as components
 import snowflake.connector
 
+# Snowsight
+# from snowflake.snowpark.context import get_active_session
+# session = get_active_session()
+
 
 @st.cache_resource
 def get_conn() -> snowflake.connector.SnowflakeConnection:
@@ -32,25 +36,19 @@ cursor = conn.cursor()
 
 
 @st.cache_data
-def load_questions(c: snowflake.connector.SnowflakeConnection) -> list[dict]:
+def load_questions() -> list[dict]:
     """
     Load questions from the Snowflake database, ordered by the "ORDER" column.
-
-    Args:
-        c (snowflake.connector.SnowflakeConnection): Connection to interact with the Snowflake dtb.
 
     Returns:
         list[dict]: A list of question with its attributes.
     """
-    c.execute('SELECT * FROM QUESTIONS ORDER BY "ORDER"')
-    r = c.fetchall()
-    cols = [col[0] for col in c.description]
-    return [dict(zip(cols, rr)) for rr in r]
-
-
-# Snowsight
-# from snowflake.snowpark.context import get_active_session
-# session = get_active_session()
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM QUESTIONS ORDER BY "ORDER"')
+    rows = cursor.fetchall()
+    cols = [col[0] for col in cursor.description]
+    return [dict(zip(cols, row)) for row in rows]
 
 
 def band_from_score(sc: float) -> int:
@@ -198,7 +196,7 @@ if "selected_answers" not in st.session_state:
     st.session_state["selected_answers"] = {}
 
 # Load questions
-questions = load_questions(cursor)
+questions = load_questions()
 NB_QUESTIONS = len(questions)
 
 
