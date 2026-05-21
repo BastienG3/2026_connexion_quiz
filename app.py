@@ -6,7 +6,6 @@ from streamlit_app import constants as csts
 from streamlit_app import styles
 from streamlit_app.plexus import PLEXUS_HTML
 import streamlit.components.v1 as components
-
 import snowflake.connector
 
 
@@ -16,20 +15,38 @@ def get_conn() -> snowflake.connector.SnowflakeConnection:
     Returns a cached Snowflake connection using credentials stored in Streamlit secrets.
 
     Returns:
-        snowflake.connector.SnowflakeConnection: A connection object to interact with the Snowflake database.
+        snowflake.connector.SnowflakeConnection: Connection to interact with the Snowflake dtb.
     """
     return snowflake.connector.connect(
-        user=st.secrets["snowflake"]["user"],
-        password=st.secrets["snowflake"]["password"],
-        account=st.secrets["snowflake"]["account"],
-        warehouse=st.secrets["snowflake"]["warehouse"],
-        database=st.secrets["snowflake"]["database"],
-        schema=st.secrets["snowflake"]["schema"],
+        user=st.secrets["snowflake"]["SNOWFLAKE_USERNAME"],
+        password=st.secrets["snowflake"]["SNOWFLAKE_PASSWORD"],
+        account=st.secrets["snowflake"]["SNOWFLAKE_ACCOUNT"],
+        warehouse=st.secrets["snowflake"]["SNOWFLAKE_WAREHOUSE"],
+        database=st.secrets["snowflake"]["SNOWFLAKE_DATABASE"],
+        schema=st.secrets["snowflake"]["SNOWFLAKE_SCHEMA"],
     )
 
 
 conn = get_conn()
 cursor = conn.cursor()
+
+
+@st.cache_data
+def load_questions(c: snowflake.connector.SnowflakeConnection) -> list[dict]:
+    """
+    Load questions from the Snowflake database, ordered by the "ORDER" column.
+
+    Args:
+        c (snowflake.connector.SnowflakeConnection): Connection to interact with the Snowflake dtb.
+
+    Returns:
+        list[dict]: A list of question with its attributes.
+    """
+    c.execute('SELECT * FROM QUESTIONS ORDER BY "ORDER"')
+    r = c.fetchall()
+    cols = [col[0] for col in c.description]
+    return [dict(zip(cols, rr)) for rr in r]
+
 
 # Snowsight
 # from snowflake.snowpark.context import get_active_session
@@ -123,7 +140,7 @@ if st.session_state["show_home"]:
             # count_data = session.sql("SELECT COUNT(*) AS TOTAL_COUNT FROM PROSPECTS").collect()
 
             cursor.execute("SELECT COUNT(*) AS TOTAL_COUNT FROM PROSPECTS")
-            row = cursor.fetchnone()
+            row = cursor.fetchone()
             total_registered = row[0]
 
             if total_registered > 0:
@@ -181,13 +198,7 @@ if "selected_answers" not in st.session_state:
     st.session_state["selected_answers"] = {}
 
 # Load questions
-
-# Snowsight
-# questions = session.table("QUESTIONS").order_by("ORDER").collect()
-
-cursor.execute("SELECT * FROM QUESTIONS ORDER BY ORDER")
-questions = cursor.fetchall()
-
+questions = load_questions(cursor)
 NB_QUESTIONS = len(questions)
 
 
@@ -318,9 +329,9 @@ if st.session_state["q_index"] >= NB_QUESTIONS:
             JOIN CHOICES c ON c.VALUE = r.ANSWER_VALUE
             WHERE r.PROSPECT_ID = '{st.session_state["prospect_id"]}'
         """)
-        score = cursor.fetchall()
-
-        MATURITY_LEVEL = band_from_score(score[0]["TOTAL_SCORE"])
+        row = cursor.fetchone()
+        total_score = row[0] if row[0] is not None else 0
+        MATURITY_LEVEL = band_from_score(total_score)
 
         # Snowsight
         # band_info = (
