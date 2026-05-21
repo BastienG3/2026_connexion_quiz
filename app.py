@@ -278,9 +278,9 @@ if st.session_state["q_index"] >= NB_QUESTIONS:
                     USING (
                         SELECT
                             '{st.session_state["prospect_id"]}' AS PROSPECT_ID,
+                            '{safe_email}' AS EMAIL,
                             '{safe_name}' AS NAME,
                             '{safe_company}' AS COMPANY,
-                            '{safe_email}' AS EMAIL,
                             '{safe_role}' AS ROLE,
                             {1 if consent else 0} AS CONSENT
                         ) AS src
@@ -290,11 +290,12 @@ if st.session_state["q_index"] >= NB_QUESTIONS:
                         UPDATE SET
                             NAME = src.NAME,
                             COMPANY = src.COMPANY,
+                            ROLE = src.ROLE,
                             CONSENT = src.CONSENT
                     WHEN NOT MATCHED THEN INSERT(
-                        PROSPECT_ID, NAME, COMPANY, EMAIL, CONSENT
+                        PROSPECT_ID, EMAIL, NAME, COMPANY, ROLE, CONSENT
                     ) VALUES (
-                        src.PROSPECT_ID, src.NAME, src.COMPANY, src.EMAIL, src.CONSENT
+                        src.PROSPECT_ID, src.EMAIL, src.NAME, src.COMPANY, src.ROLE, src.CONSENT
                     )
                     """)
                 conn.commit()
