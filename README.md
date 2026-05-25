@@ -29,12 +29,18 @@ A Streamlit application for interactive quizzes and connection assessments.
   > pip install virtualenv 
 - Create new Virtual Environment 
   > virtualenv env 
+  or
+  (if virtualenv is not recognized from direct execution, using python -m will bypass the PATH)
+  > python -m virtualenv env
 - Activate the environment
-  > .\env\Scripts\activate
+  > .\env\Scripts\activate.ps1
+  or
+  (if system does not allow execution of ps1)
+  > powershell.exe -ExecutionPolicy Bypass -File .\env\Scripts\activate.ps1
 - Upgrade pip
   > python.exe -m pip install --upgrade pip
 - Install packages
-  > pip install -r \requirements.txt
+  > pip install -r .\requirements.txt
 
 #### Complete secrets
 - Init local secret file from template:
