@@ -23,6 +23,11 @@ def load_fonts():
     return f"<style>{fonts}</style>"
 
 
+def image_to_base64(path):
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
 GLOBAL_CSS = """
 <style>
   :root {
@@ -495,6 +500,107 @@ GLOBAL_CSS = """
   @keyframes kpcFadeIn {
     to { opacity: 1; transform: translateY(0); }
   }
+
+
+  .maturity-grid {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+  }
+
+.maturity-card {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px) scale(0.95);
+  animation: popIn 1s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+  animation-delay: 0.05s;
+}
+
+  /* Active card */
+.maturity-card.active {
+  flex: 3.2; 
+  padding: 24px;
+  background: rgba(255,107,26,0.4);
+  border: 2px solid #ff6b1a;
+  box-shadow: 0 10px 30px rgba(255,107,26,0.55);
+  }
+  
+@keyframes popIn {
+  0% {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+    visibility: hidden;
+  }
+  60% {
+    transform: translateY(-5px) scale(1.02);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.maturity-card:nth-child(1) { animation-delay: 0.05s; }
+.maturity-card:nth-child(2) { animation-delay: 0.1s; }
+.maturity-card:nth-child(3) { animation-delay: 0.2s; }
+.maturity-card:nth-child(4) { animation-delay: 0.3s; }
+
+  .maturity-title {
+    font-size: 14px;
+    color: white;
+    margin-bottom: 8px;
+    text-align: center;
+    opacity: 0.8;
+  }
+
+  .maturity-card.active .maturity-title {
+    opacity: 1;
+    font-weight: bold;
+}
+
+  .maturity-text {
+    font-size: 14px;
+    margin-top: 10px;
+    color: rgba(255,255,255,0.95);
+}
+
+  .maturity-pitch {
+    font-size: 13px;
+    margin-top: 10px;
+    color: rgba(255,255,255,0.85);
+}
+
+.maturity-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 14px auto;
+  display: block;
+  opacity: 0.8;
+  transition: transform 0.3s ease;
+}
+
+.maturity-card.active .maturity-icon {
+  width: 64px;
+  height: 64px;
+  opacity: 1;
+}
+
+
+  }
+
+
+
 </style>
 """
 
@@ -588,5 +694,50 @@ def result_card_html(eyebrow, band_name, text, pitch):
         <p class="kpc-result-text">{text}</p>
         <div class="kpc-result-pitch">{pitch}</div>
       </div>
+    </div>
+    """
+
+
+def maturity_grid_html(
+    levels,
+    current_level,
+    band_names,
+    text,
+    pitch,
+    icons_map,
+    img_folder: str = "streamlit_app/images",
+):
+    cards = ""
+
+    for lvl in levels:
+        is_active = lvl == current_level
+        cls = "maturity-card active" if is_active else "maturity-card"
+
+        band_name = band_names["maturity_level_" + str(lvl)].capitalize()
+        icon = icons_map.get(lvl, "")
+        img_data = image_to_base64(os.path.join(img_folder, icon)) if icon else ""
+        img_html = (
+            f'<img class="maturity-icon" src="data:image/png;base64,{img_data}" alt="Icon" />'
+            if img_data
+            else ""
+        )
+
+        if is_active:
+
+            cards += f"""<div class="{cls}">
+                {img_html}
+                <div class="maturity-title">{band_name}</div>
+                <div class="maturity-text">{text}</div>
+                <div class="maturity-pitch">{pitch}</div>
+            </div>"""
+        else:
+            cards += f"""<div class="{cls}">
+                {img_html}
+                <div class="maturity-title">{band_name}</div>
+            </div>"""
+
+    return f"""
+    <div class="maturity-grid">
+        {cards}
     </div>
     """

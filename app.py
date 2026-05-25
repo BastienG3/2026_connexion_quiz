@@ -1,16 +1,11 @@
 import streamlit as st
 from uuid import uuid4
 import re
-import time
 from streamlit_app import constants as csts
 from streamlit_app import styles
 from streamlit_app.plexus import PLEXUS_HTML
 import streamlit.components.v1 as components
 import snowflake.connector
-
-# Snowsight
-# from snowflake.snowpark.context import get_active_session
-# session = get_active_session()
 
 
 @st.cache_resource
@@ -176,14 +171,6 @@ if st.session_state["show_home"]:
 
     with home_mid_right:
 
-        # Linktree
-        # QR_URL = (
-        #    "https://api.qrserver.com/v1/create-qr-code/?size=200x200"
-        #    "&data=https%3A%2F%2Flinktr.ee%2Fgroupekpc"
-        #    "%3Futm_source%3Dlinktree_profile_share"
-        #    "%26ltsid%3Dab18f1ca-e451-4beb-aece-22d5c6279f46"
-        # )
-
         # Montreal webpage
         QR_URL = (
             "https://api.qrserver.com/v1/create-qr-code/?size=200x200"
@@ -213,6 +200,13 @@ if "selected_answers" not in st.session_state:
 # Load questions
 questions = load_questions()
 NB_QUESTIONS = len(questions)
+
+
+# TODO TO COMMENT -- DEBUG RESULT SCREEN
+if st.button("GO TO RESULT (DEBUG)"):
+    st.session_state["q_index"] = NB_QUESTIONS
+    st.session_state["form_submitted"] = True
+    st.rerun()
 
 
 ################################################
@@ -262,32 +256,6 @@ if st.session_state["q_index"] >= NB_QUESTIONS:
                 safe_email = email.replace("'", "''")
                 safe_role = role.replace("'", "''")
 
-                # Snowsight
-                # session.sql(f"""
-                #     MERGE INTO PROSPECTS AS tgt
-                #     USING (
-                #         SELECT
-                #             '{st.session_state["prospect_id"]}' AS PROSPECT_ID,
-                #             '{safe_name}' AS NAME,
-                #             '{safe_company}' AS COMPANY,
-                #             '{safe_email}' AS EMAIL,
-                #             '{safe_role}' AS ROLE,
-                #             {1 if consent else 0} AS CONSENT
-                #         ) AS src
-                #         ON tgt.PROSPECT_ID = src.PROSPECT_ID
-                #         AND tgt.EMAIL = src.EMAIL
-                #     WHEN MATCHED THEN
-                #         UPDATE SET
-                #             NAME = src.NAME,
-                #             COMPANY = src.COMPANY,
-                #             CONSENT = src.CONSENT
-                #     WHEN NOT MATCHED THEN INSERT(
-                #         PROSPECT_ID, NAME, COMPANY, EMAIL, CONSENT
-                #     ) VALUES (
-                #         src.PROSPECT_ID, src.NAME, src.COMPANY, src.EMAIL, src.CONSENT
-                #     )
-                #     """).collect()
-
                 cursor.execute(f"""
                     MERGE INTO PROSPECTS AS tgt
                     USING (
@@ -329,14 +297,6 @@ if st.session_state["q_index"] >= NB_QUESTIONS:
     ################################################
     else:
 
-        # Snowsight
-        # score = session.sql(f"""
-        #     SELECT SUM(c.SCORE) AS TOTAL_SCORE
-        #     FROM RESULTS r
-        #     JOIN CHOICES c ON c.VALUE = r.ANSWER_VALUE
-        #     WHERE r.PROSPECT_ID = '{st.session_state["prospect_id"]}'
-        # """).collect()
-
         cursor.execute(f"""
             SELECT SUM(c.SCORE) AS TOTAL_SCORE
             FROM RESULTS r
@@ -347,32 +307,31 @@ if st.session_state["q_index"] >= NB_QUESTIONS:
         total_score = row[0] if row[0] is not None else 0
         MATURITY_LEVEL = band_from_score(total_score)
 
-        # Snowsight
-        # band_info = (
-        #     session.table("RESULT_BANDS")
-        #     .filter(f"MATURITY_LEVEL = '{MATURITY_LEVEL}'")
-        #     .collect()[0]
-        # )
-
-        cursor.execute(f"""
+        cursor.execute("""
             SELECT *
             FROM RESULT_BANDS
-            WHERE MATURITY_LEVEL = '{MATURITY_LEVEL}'
         """)
-        row = cursor.fetchone()
-        columns = [col[0] for col in cursor.description]
-        band_info = dict(zip(columns, row))
 
+        rows = cursor.fetchall()
+        columns = [col[0] for col in cursor.description]
+        data = [dict(zip(columns, row)) for row in rows]
+
+        bands_map = {row["MATURITY_LEVEL"]: row for row in data}
+
+        icons_map = {lvl: row["ICON_FILENAME"] for lvl, row in bands_map.items()}
+        band_info = bands_map.get(MATURITY_LEVEL, {})
         text = band_info["TEXT_" + lang]
         pitch = band_info["PITCH_" + lang]
         band_name = csts.texts[lang]["maturity_level_" + str(MATURITY_LEVEL)]
 
         st.markdown(
-            styles.result_card_html(
-                eyebrow=csts.texts[lang]["maturity_msg"],
-                band_name=band_name.capitalize(),
+            styles.maturity_grid_html(
+                levels=[1, 2, 3, 4],
+                current_level=MATURITY_LEVEL,
+                band_names=csts.texts[lang],
                 text=text,
                 pitch=pitch,
+                icons_map=icons_map,
             ),
             unsafe_allow_html=True,
         )
@@ -414,10 +373,6 @@ st.markdown(styles.quiz_meta_html(COUNTER_TEXT), unsafe_allow_html=True)
 st.markdown(styles.question_html(question_order, question_body), unsafe_allow_html=True)
 
 # --- LOAD CHOICES ---
-
-# Snowsight
-# choices_df = session.table("CHOICES").filter(f"QUESTION_ID = {question_id}").collect()
-
 cursor.execute(f"""
     SELECT *
     FROM CHOICES
@@ -494,28 +449,8 @@ with nav_r:
         disabled=not has_selection,
     ):
         selected = current_selection
+
         # Save answer to Snowflake
-
-        # Snowsight
-        # session.sql(f"""
-        #     MERGE INTO RESULTS AS tgt
-        #     USING (
-        #         SELECT
-        #             '{st.session_state["prospect_id"]}' AS PROSPECT_ID,
-        #             '{question_id}' AS QUESTION_ID,
-        #             '{selected}' AS ANSWER_VALUE
-        #         ) AS src
-        #         ON tgt.PROSPECT_ID = src.PROSPECT_ID
-        #         AND tgt.QUESTION_ID = src.QUESTION_ID
-        #     WHEN MATCHED THEN
-        #         UPDATE SET ANSWER_VALUE = src.ANSWER_VALUE
-        #     WHEN NOT MATCHED THEN INSERT(
-        #         PROSPECT_ID, QUESTION_ID, ANSWER_VALUE
-        #     ) VALUES (
-        #         src.PROSPECT_ID, src.QUESTION_ID, src.ANSWER_VALUE
-        #     )
-        #     """).collect()
-
         cursor.execute(f"""
             MERGE INTO RESULTS AS tgt
             USING (
