@@ -121,7 +121,13 @@ PLEXUS_HTML = """
   }
 
   function initNodes() {
-    const count = 250;
+    let count = 250;
+    if (W < 480) {
+      count = 70;
+    } else if (W < 1024) {
+      count = 140;
+    }
+    
     nodes = [];
     for (let i = 0; i < count; i++) {
       nodes.push({
