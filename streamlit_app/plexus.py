@@ -1,6 +1,7 @@
 PLEXUS_HTML = """
 <script>
 (function() {
+
   const parentWin = window.parent;
   const parentDoc = parentWin.document;
 
@@ -92,7 +93,7 @@ PLEXUS_HTML = """
 
     // Golden dust particles
     c.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 120; i++) {
       const x = Math.random() * W;
       const y = Math.random() * H;
       const r = Math.random() * 1.2 + 0.2;
@@ -121,11 +122,11 @@ PLEXUS_HTML = """
   }
 
   function initNodes() {
-    let count = 250;
+    let count = 160;
     if (W < 480) {
-      count = 70;
+      count = 50;
     } else if (W < 1024) {
-      count = 140;
+      count = 100;
     }
     
     nodes = [];
@@ -142,7 +143,15 @@ PLEXUS_HTML = """
     nodes.push({ x: W/2, y: H/2, vx: 0, vy: 0, r: 3, isPointer: true });
   }
 
-  function draw() {
+
+  let last = 0;
+
+  function draw(ts) {
+      if (ts - last < 33) {
+        parentWin.requestAnimationFrame(draw);
+        return;
+      }
+      last = ts;
     // Paint pre-rendered nebula as background
     ctx.drawImage(bgCanvas, 0, 0);
 
@@ -160,14 +169,16 @@ PLEXUS_HTML = """
     ptr.y += (mouse.y - ptr.y) * 0.08;
 
     const maxDist = 160;
+    const maxDist2 = maxDist * maxDist;
     const clickRadius = 85;
 
     for (let i = 0; i < nodes.length - 1; i++) {
-      for (let j = i + 1; j < nodes.length - 1; j++) {
+      for (let j = i + 1; j < nodes.length - 1; j += 2) {
         const a = nodes[i], b = nodes[j];
         const dx = a.x - b.x, dy = a.y - b.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < maxDist) {
+        const dist2 = dx*dx + dy*dy;
+        const dist = Math.sqrt(dist2);
+        if (dist2 < maxDist2) {
           const alpha = (1 - dist / maxDist) * 0.7;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
@@ -179,12 +190,13 @@ PLEXUS_HTML = """
       }
     }
 
-    const pointerReach = 200;
+    const pointerReach = 140;
     for (let i = 0; i < nodes.length - 1; i++) {
       const n = nodes[i];
       const dx = n.x - ptr.x, dy = n.y - ptr.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < pointerReach) {
+      const dist2 = dx*dx + dy*dy;
+      const dist = Math.sqrt(dist2);
+      if (dist2 < pointerReach * pointerReach) {
         const alpha = (1 - dist / pointerReach) * 0.65;
         ctx.beginPath();
         ctx.moveTo(n.x, n.y);
@@ -215,6 +227,7 @@ PLEXUS_HTML = """
     ctx.fill();
 
     parentWin.requestAnimationFrame(draw);
+
   }
 
   parentWin.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });

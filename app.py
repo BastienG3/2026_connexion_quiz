@@ -27,7 +27,14 @@ def get_conn() -> snowflake.connector.SnowflakeConnection:
 
 
 conn = get_conn()
-cursor = conn.cursor()
+
+
+@st.cache_resource
+def get_cursor():
+    return conn.cursor()
+
+
+cursor = get_cursor()
 
 
 @st.cache_data
@@ -38,12 +45,27 @@ def load_questions() -> list[dict]:
     Returns:
         list[dict]: A list of question with its attributes.
     """
-    conn = get_conn()
-    cursor = conn.cursor()
+    cursor = get_cursor()
     cursor.execute('SELECT * FROM QUESTIONS ORDER BY "ORDER"')
     rows = cursor.fetchall()
     cols = [col[0] for col in cursor.description]
     return [dict(zip(cols, row)) for row in rows]
+
+
+@st.cache_data
+def load_result_bands():
+    cursor = get_cursor()
+    cursor.execute("SELECT * FROM RESULT_BANDS")
+    rows = cursor.fetchall()
+    cols = [col[0] for col in cursor.description]
+    return [dict(zip(cols, row)) for row in rows]
+
+
+@st.cache_data(ttl=60)
+def load_prospect_count():
+    cursor = get_cursor()
+    cursor.execute("SELECT COUNT(*) FROM PROSPECTS")
+    return cursor.fetchone()[0]
 
 
 def band_from_score(sc: float) -> int:
@@ -131,9 +153,7 @@ with st.container():
                     st.session_state["show_home"] = False
                     st.rerun()
 
-                cursor.execute("SELECT COUNT(*) AS TOTAL_COUNT FROM PROSPECTS")
-                row = cursor.fetchone()
-                total_registered = row[0]
+                total_registered = load_prospect_count()
 
                 if total_registered > 0:
                     COUNTER_MSG = (
@@ -289,14 +309,7 @@ with st.container():
                 total_score = row[0] if row[0] is not None else 0
                 MATURITY_LEVEL = band_from_score(total_score)
 
-                cursor.execute("""
-                    SELECT *
-                    FROM RESULT_BANDS
-                """)
-
-                rows = cursor.fetchall()
-                columns = [col[0] for col in cursor.description]
-                data = [dict(zip(columns, row)) for row in rows]
+                data = load_result_bands()
 
                 bands_map = {row["MATURITY_LEVEL"]: row for row in data}
 
@@ -333,6 +346,7 @@ with st.container():
                 st.session_state.clear()
                 st.session_state["show_home"] = True
                 st.rerun()
+
             st.markdown("</div>", unsafe_allow_html=True)
             st.stop()
 
