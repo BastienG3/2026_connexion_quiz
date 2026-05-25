@@ -7,6 +7,10 @@ from streamlit_app.plexus import PLEXUS_HTML
 import streamlit.components.v1 as components
 import snowflake.connector
 
+# TODO TO COMMENT -- CLEAR CACHES ON EVERY RUN FOR DEV PURPOSES, REMOVE LATER
+# st.cache_data.clear()
+# st.cache_resource.clear()
+
 
 @st.cache_resource
 def get_conn() -> snowflake.connector.SnowflakeConnection:
@@ -27,25 +31,12 @@ def get_conn() -> snowflake.connector.SnowflakeConnection:
 
 
 conn = get_conn()
-
-
-@st.cache_resource
-def get_cursor():
-    return conn.cursor()
-
-
-cursor = get_cursor()
+cursor = conn.cursor()
 
 
 @st.cache_data
 def load_questions() -> list[dict]:
-    """
-    Load questions from the Snowflake database, ordered by the "ORDER" column.
-
-    Returns:
-        list[dict]: A list of question with its attributes.
-    """
-    cursor = get_cursor()
+    cursor = conn.cursor()
     cursor.execute('SELECT * FROM QUESTIONS ORDER BY "ORDER"')
     rows = cursor.fetchall()
     cols = [col[0] for col in cursor.description]
@@ -54,7 +45,7 @@ def load_questions() -> list[dict]:
 
 @st.cache_data
 def load_result_bands():
-    cursor = get_cursor()
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM RESULT_BANDS")
     rows = cursor.fetchall()
     cols = [col[0] for col in cursor.description]
@@ -63,21 +54,12 @@ def load_result_bands():
 
 @st.cache_data(ttl=60)
 def load_prospect_count():
-    cursor = get_cursor()
+    cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM PROSPECTS")
     return cursor.fetchone()[0]
 
 
 def band_from_score(sc: float) -> int:
-    """
-    Return the maturity band (1 to 4) corresponding to the given score, based on predefined thresholds.
-
-    Args:
-        sc (float): score obtained by the user based on their answers, used to determine maturity band.
-
-    Returns:
-        int: maturity band (1 to 4) corresponding to the given score, where 1 is the lowest maturity and 4 the highest.
-    """
     if sc <= 17:
         return 1
     if sc <= 25:
