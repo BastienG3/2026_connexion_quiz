@@ -322,7 +322,7 @@ with st.container():
 
             st.markdown('<div class="kpc-nav-row">', unsafe_allow_html=True)
             # Allow the user to return home manually after they finish reading
-            HOME_BTN_LABEL = "Retour à l'accueil" if lang == "FR" else "Return to Home"
+            HOME_BTN_LABEL = csts.texts[lang]["return_home"]
 
             if st.button(
                 HOME_BTN_LABEL,

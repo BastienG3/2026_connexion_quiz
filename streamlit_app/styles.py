@@ -550,61 +550,67 @@ GLOBAL_CSS = """
     to { opacity: 1; transform: translateY(0); }
   }
 
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+  /* =====================================================================
+    CARDS
+    ===================================================================== */
+
+   /* ----- INITIAL DISPLAY ----- */  
+
   .maturity-grid {
     display: flex;
     gap: 16px;
     width: 100%;
+    align-items: stretch;
   }
 
-.maturity-card {
-  flex: 1;
-  padding: 14px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.15);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(20px) scale(0.95);
-  animation: popIn 1s cubic-bezier(0.2, 0, 0.2, 1) forwards;
-  animation-delay: 0.05s;
-}
-
-  /* Active card */
-.maturity-card.active {
-  flex: 3.2; 
-  padding: 24px;
-  background: rgba(255,107,26,0.4);
-  border: 2px solid #ff6b1a;
-  box-shadow: 0 10px 30px rgba(255,107,26,0.55);
-  }
-  
-@keyframes popIn {
-  0% {
-    transform: translateY(20px) scale(0.95);
+  .maturity-card {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
     opacity: 0;
     visibility: hidden;
+    transform: translateY(20px) scale(0.95);
+    position: relative;
   }
-  60% {
-    transform: translateY(-5px) scale(1.02);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-    visibility: visible;
-  }
-}
 
-.maturity-card:nth-child(1) { animation-delay: 0.05s; }
-.maturity-card:nth-child(2) { animation-delay: 0.1s; }
-.maturity-card:nth-child(3) { animation-delay: 0.2s; }
-.maturity-card:nth-child(4) { animation-delay: 0.3s; }
+  /* ----- POP-IN ANIMATION ----- */
 
+  @keyframes popIn {
+    0% {
+      transform: translateY(20px) scale(0.95);
+      opacity: 0;
+      visibility: hidden;
+    }
+    60% {
+      transform: translateY(-5px) scale(1.02);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+
+  .maturity-card:nth-child(1) { animation-delay: 0.1s; }
+  .maturity-card:nth-child(2) { animation-delay: 0.25s; }
+  .maturity-card:nth-child(3) { animation-delay: 0.4s; }
+  .maturity-card:nth-child(4) { animation-delay: 0.55s; }
+
+  /* ----- CARD CONTENT ----- */ 
+ 
   .maturity-title {
+    font-weight: bold;
     font-size: 14px;
     color: white;
     margin-bottom: 8px;
@@ -613,42 +619,139 @@ GLOBAL_CSS = """
   }
 
   .maturity-card.active .maturity-title {
-    opacity: 1;
-    font-weight: bold;
-}
+    animation: 
+      zoomTitle 0.5s ease forwards 4.5s;
+  }
 
-  .maturity-text {
-    font-size: 14px;
-    margin-top: 10px;
+  @keyframes zoomTitle {
+    to {
+      font-size: 28px;
+    }
+  }
+
+  .maturity-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 14px auto;
+    display: block;
+    opacity: 0.8;
+    transition: transform 0.3s ease;
+  }
+
+  .maturity-card.active .maturity-icon {
+    animation: 
+      zoomIcon 0.5s ease forwards 4.5s;
+  }
+
+  @keyframes zoomIcon {
+    to {
+      width: 88px;
+      height: 88px;
+    }
+  }
+
+
+  /* ----- TEXT + PITCH ----- */
+
+   .maturity-text {
+    font-size: 20px;
     color: rgba(255,255,255,0.95);
-}
+    position: absolute; 
+    text-align: left;
+    opacity: 0; 
+    visibility: hidden;
+  }
 
-  .maturity-pitch {
-    font-size: 13px;
-    margin-top: 10px;
+   .maturity-pitch {
+    font-size: 20px;
     color: rgba(255,255,255,0.85);
-}
+    position: absolute; 
+    text-align: left;
+    opacity: 0; 
+    visibility: hidden;
+    
+  }
+    
+  .maturity-card.active .maturity-text {
+    animation: 
+      takePlace 1s ease forwards 4.5s,
+      revealContent 2s ease forwards 5.5s;
+  }
 
-.maturity-icon {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 14px auto;
-  display: block;
-  opacity: 0.8;
-  transition: transform 0.3s ease;
-}
+  .maturity-card.active .maturity-pitch {
+    animation: 
+      takePlace 1s ease forwards 5.5s,
+      revealContent 2s ease forwards 6.5s;
+  }
 
-.maturity-card.active .maturity-icon {
-  width: 64px;
-  height: 64px;
-  opacity: 1;
-}
+  @keyframes takePlace {
+    to {
+      position: static;
+    }
+  }
+  
+  @keyframes revealContent {
+    to {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+
+  /* ----- NON-ACTIVE CARDS ----- */
+  .maturity-card:not(.active) {
+    animation: 
+      popIn 1s cubic-bezier(0.2, 0, 0.2, 1) forwards,   /* start at 0s, end at 1s*/
+      dimCard 0.5s ease forwards 2s,                    /* start at 2s, end at 2.5s */
+      disappear 0.75s ease forwards 3.5s;               /* start at 3.5s, end at 4.25s */
+  }
+
+  @keyframes dimCard {
+    to {
+      opacity: 0.7;
+      filter: grayscale(0.3);
+    }
+  }
 
 
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+  @keyframes disappear {
+    to {
+      opacity: 0;
+      visibility: hidden;
+      flex:0;
+      width: 0;
+      margin: 0;
+      padding: 0;
+    }
+  }
 
+    /* ----- ACTIVE CARD ----- */
+  .maturity-card.active {
+    animation: 
+      popIn 1s cubic-bezier(0.2, 0, 0.2, 1) forwards,               /* start at 0s, end at 1s*/
+      highlightCard 0.5s ease forwards 2s,                          /* start at 2s, end at 2.5s */
+      expandCard 0.75s cubic-bezier(0.2, 0, 0.2, 1) forwards 4s;  /* start at 3.5s, end at 4.25s */
+  }
+
+  @keyframes highlightCard {
+    to {
+      transform: translateY(-6px) scale(1.05);
+      padding: 24px;
+      background: rgba(255,107,26,0.2);
+      border: 2px solid #ff6b1a;
+      box-shadow: 0 10px 30px rgba(255,107,26,0.55);
+    }
+  }
+
+  @keyframes expandCard {
+    from {
+      flex: 1;
+    }
+    to {
+      flex: 1 1 100%;
+      transform: scale(1.02);
+      flex: 1 1 100%;
+    }
+  }
 
   /* =====================================================================
      MOBILE PHONE VIEWPORT RUNTIME OVERRIDES (Only triggers under 480px)
@@ -803,19 +906,19 @@ def maturity_grid_html(
             else ""
         )
 
-        if is_active:
+        # if is_active:
 
-            cards += f"""<div class="{cls}">
-                {img_html}
-                <div class="maturity-title">{band_name}</div>
-                <div class="maturity-text">{text}</div>
-                <div class="maturity-pitch">{pitch}</div>
-            </div>"""
-        else:
-            cards += f"""<div class="{cls}">
-                {img_html}
-                <div class="maturity-title">{band_name}</div>
-            </div>"""
+        cards += f"""<div class="{cls}">
+            {img_html}
+            <div class="maturity-title">{band_name}</div>
+              <div class="maturity-text">{text}</div>
+              <div class="maturity-pitch">{pitch}</div>
+        </div>"""
+        # else:
+        #     cards += f"""<div class="{cls}">
+        #         {img_html}
+        #         <div class="maturity-title">{band_name}</div>
+        #     </div>"""
 
     return f"""
     <div class="maturity-grid">
