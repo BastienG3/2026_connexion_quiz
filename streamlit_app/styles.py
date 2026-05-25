@@ -562,7 +562,6 @@ GLOBAL_CSS = """
 
   .maturity-grid {
     display: flex;
-    gap: 16px;
     width: 100%;
     align-items: stretch;
   }
@@ -652,42 +651,46 @@ GLOBAL_CSS = """
 
 
   /* ----- TEXT + PITCH ----- */
+  
+  .maturity-main {
+      position: absolute; 
+    }
 
-   .maturity-text {
-    font-size: 20px;
-    color: rgba(255,255,255,0.95);
-    position: absolute; 
-    text-align: left;
-    opacity: 0; 
-    visibility: hidden;
-  }
-
-   .maturity-pitch {
-    font-size: 20px;
-    color: rgba(255,255,255,0.85);
-    position: absolute; 
-    text-align: left;
-    opacity: 0; 
-    visibility: hidden;
-    
-  }
-    
-  .maturity-card.active .maturity-text {
+  .maturity-card.active .maturity-main {
     animation: 
-      takePlace 1s ease forwards 4.5s,
-      revealContent 2s ease forwards 5.5s;
-  }
-
-  .maturity-card.active .maturity-pitch {
-    animation: 
-      takePlace 1s ease forwards 5.5s,
-      revealContent 2s ease forwards 6.5s;
+      takePlace 2s ease forwards 4.5s;
   }
 
   @keyframes takePlace {
     to {
       position: static;
     }
+  }
+
+   .maturity-text {
+    font-size: 20px;
+    opacity: 0; 
+    color: rgba(255,255,255,0.95);
+    text-align: left;
+    visibility: hidden;
+  }
+
+   .maturity-pitch {
+    font-size: 20px;
+    opacity: 0; 
+    color: rgba(255,255,255,0.85);
+    text-align: left;
+    visibility: hidden;
+  }
+    
+  .maturity-card.active .maturity-text {
+    animation: 
+      revealContent 2s ease forwards 6.5s;
+  }
+
+  .maturity-card.active .maturity-pitch {
+    animation: 
+      revealContent 2s ease forwards 8.5s;
   }
   
   @keyframes revealContent {
@@ -711,7 +714,6 @@ GLOBAL_CSS = """
       filter: grayscale(0.3);
     }
   }
-
 
   @keyframes disappear {
     to {
@@ -906,19 +908,14 @@ def maturity_grid_html(
             else ""
         )
 
-        # if is_active:
-
         cards += f"""<div class="{cls}">
             {img_html}
             <div class="maturity-title">{band_name}</div>
-              <div class="maturity-text">{text}</div>
-              <div class="maturity-pitch">{pitch}</div>
+              <div class="maturity-main">
+                <div class="maturity-text">{text}</div>
+                <div class="maturity-pitch">{pitch}</div>
+              </div>
         </div>"""
-        # else:
-        #     cards += f"""<div class="{cls}">
-        #         {img_html}
-        #         <div class="maturity-title">{band_name}</div>
-        #     </div>"""
 
     return f"""
     <div class="maturity-grid">
