@@ -12,7 +12,7 @@ PLEXUS_HTML = """
   if (!canvas) {
     canvas = parentDoc.createElement('canvas');
     canvas.id = 'plexus-canvas';
-    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;';
+    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100dvh;z-index:-1;pointer-events:none;';
     parentDoc.body.appendChild(canvas);
   }
   const ctx = canvas.getContext('2d');

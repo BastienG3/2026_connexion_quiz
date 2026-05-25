@@ -56,15 +56,15 @@ GLOBAL_CSS = """
   [data-testid="stMain"],
   [data-testid="stMainBlockContainer"] {
     background: transparent !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
     overflow: hidden !important;
   }
  
   #plexus-canvas {
     position: fixed;
     top: 0; left: 0;
-    width: 100vw; height: 100vh;
+    width: 100vw; height: 100dvh;
     z-index: -1;
     pointer-events: none;
   }
@@ -72,8 +72,8 @@ GLOBAL_CSS = """
   .block-container {
     padding: clamp(10px, 2vh, 24px) 20px !important;
     max-width: 1000px !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
