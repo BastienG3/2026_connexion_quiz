@@ -55,7 +55,9 @@ def load_result_bands():
 @st.cache_data(ttl=60)
 def load_prospect_count():
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM PROSPECTS")
+    cursor.execute(
+        "SELECT COUNT(1) FROM PROSPECTS WHERE DATE(CREATED_AT) = CURRENT_DATE()"
+    )
     return cursor.fetchone()[0]
 
 
@@ -67,6 +69,26 @@ def band_from_score(sc: float) -> int:
     if sc <= 32:
         return 3
     return 4
+
+
+def save_all_answers():
+    answers = st.session_state["selected_answers"]
+    prospect_id = st.session_state["prospect_id"]
+
+    if not answers:
+        return
+
+    values_sql = ",".join(
+        [f"('{prospect_id}','{q_id}','{val}')" for q_id, val in answers.items()]
+    )
+
+    query = f"""
+        INSERT INTO RESULTS (PROSPECT_ID, QUESTION_ID, ANSWER_VALUE)
+        VALUES {values_sql}
+        """
+
+    cursor.execute(query)
+    conn.commit()
 
 
 # --- CONFIG ---
@@ -86,16 +108,30 @@ NB_QUESTIONS = len(questions)
 #     st.rerun()
 
 with st.container():
+
     ################################################
-    # HEADER
+    # HEADER - logo + lang switcher
     ################################################
     if "lang" not in st.session_state:
         st.session_state["lang"] = "FR"  # default
 
+    if "show_home" not in st.session_state:
+        st.session_state["show_home"] = True
+
+    if "prospect_id" not in st.session_state:
+        st.session_state["prospect_id"] = str(uuid4())
+
+    if "q_index" not in st.session_state:
+        st.session_state["q_index"] = 0
+
+    if "selected_answers" not in st.session_state:
+        # {question_id: answer_value} highlight selected on revisit
+        st.session_state["selected_answers"] = {}
+
     st.markdown(styles.logo_chip_html(), unsafe_allow_html=True)
 
     lang = st.radio(
-        label="",
+        label="Language",
         options=["FR", "EN"],
         horizontal=True,
         index=0 if st.session_state["lang"] == "FR" else 1,
@@ -105,15 +141,14 @@ with st.container():
     st.session_state["lang"] = lang
 
     ################################################
-    # MID
+    # MID SECTION - home screen with quiz intro + QR code
     ################################################
-    if "show_home" not in st.session_state:
-        st.session_state["show_home"] = True
-
     if st.session_state["show_home"]:
         with st.container():
             st.markdown('<div class="kpc-fluid-answers-box">', unsafe_allow_html=True)
             home_mid_left, home_mid_right = st.columns([2, 1], gap="large")
+
+            # --- LEFT: Intro text + start button ---
             with home_mid_left:
                 t = csts.texts[lang]
 
@@ -153,6 +188,7 @@ with st.container():
                         unsafe_allow_html=True,
                     )
 
+            # --- RIGHT: QR code ---
             with home_mid_right:
 
                 # Montreal webpage
@@ -171,14 +207,6 @@ with st.container():
                 )
             st.markdown("</div>", unsafe_allow_html=True)
         st.stop()
-
-    if "prospect_id" not in st.session_state:
-        st.session_state["prospect_id"] = str(uuid4())
-    if "q_index" not in st.session_state:
-        st.session_state["q_index"] = 0
-    if "selected_answers" not in st.session_state:
-        # Stores {question_id: answer_value} so we can highlight selected on revisit
-        st.session_state["selected_answers"] = {}
 
     ################################################
     # END SCREEN
@@ -237,33 +265,46 @@ with st.container():
                     safe_role = role.replace("'", "''")
 
                     cursor.execute(f"""
-                        MERGE INTO PROSPECTS AS tgt
-                        USING (
-                            SELECT
-                                '{st.session_state["prospect_id"]}' AS PROSPECT_ID,
-                                '{safe_email}' AS EMAIL,
-                                '{safe_name}' AS NAME,
-                                '{safe_company}' AS COMPANY,
-                                '{safe_role}' AS ROLE,
-                                {1 if consent else 0} AS CONSENT
-                            ) AS src
-                            ON tgt.PROSPECT_ID = src.PROSPECT_ID
-                            AND tgt.EMAIL = src.EMAIL
-                        WHEN MATCHED THEN
-                            UPDATE SET
-                                NAME = src.NAME,
-                                COMPANY = src.COMPANY,
-                                ROLE = src.ROLE,
-                                CONSENT = src.CONSENT
-                        WHEN NOT MATCHED THEN INSERT(
-                            PROSPECT_ID, EMAIL, NAME, COMPANY, ROLE, CONSENT
+                        INSERT INTO PROSPECTS(
+                            PROSPECT_ID, 
+                            EMAIL, 
+                            NAME, 
+                            COMPANY, 
+                            ROLE, 
+                            CONSENT
                         ) VALUES (
-                            src.PROSPECT_ID, src.EMAIL, src.NAME, src.COMPANY, src.ROLE, src.CONSENT
+                            '{st.session_state["prospect_id"]}',
+                            '{safe_email}',
+                            '{safe_name}',
+                            '{safe_company}',
+                            '{safe_role}',
+                            {1 if consent else 0}
                         )
                         """)
                     conn.commit()
 
-                    st.success(csts.texts[lang]["saved_info_msg"])
+                    # st.success(csts.texts[lang]["saved_info_msg"])
+
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background-color: #e6f4ea;
+                            border: 1px solid #2e7d32;
+                            color: #2e7d32;
+                            padding: 12px;
+                            border-radius: 8px;
+                            font-weight: 500;
+                            margin-top: 10px;
+                        ">
+                            ✅ {csts.texts[lang]["saved_info_msg"]}
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                    if not st.session_state.get("answers_saved", False):
+                        save_all_answers()
+                        st.session_state["answers_saved"] = True
 
                     # Flip the state to True and rerun to hide the form and show the results
                     st.session_state["form_submitted"] = True
@@ -294,7 +335,6 @@ with st.container():
                 data = load_result_bands()
 
                 bands_map = {row["MATURITY_LEVEL"]: row for row in data}
-
                 icons_map = {
                     lvl: row["ICON_FILENAME"] for lvl, row in bands_map.items()
                 }
@@ -363,7 +403,6 @@ with st.container():
     )
 
     # --- LOAD CHOICES ---
-
     with st.container():
         st.markdown(
             '<div class="kpc-fluid-answers-box kpc-answer-row">', unsafe_allow_html=True
@@ -428,6 +467,7 @@ with st.container():
 
     with nav_r:
         is_last = st.session_state["q_index"] == NB_QUESTIONS - 1
+
         text_validate_btn = (
             csts.texts[lang]["complete_btn"]
             if is_last
@@ -444,28 +484,6 @@ with st.container():
             disabled=not has_selection,
             use_container_width=True,
         ):
-            selected = current_selection
-
-            # Save answer to Snowflake
-            cursor.execute(f"""
-                MERGE INTO RESULTS AS tgt
-                USING (
-                    SELECT
-                        '{st.session_state["prospect_id"]}' AS PROSPECT_ID,
-                        '{question_id}' AS QUESTION_ID,
-                        '{selected}' AS ANSWER_VALUE
-                    ) AS src
-                    ON tgt.PROSPECT_ID = src.PROSPECT_ID
-                    AND tgt.QUESTION_ID = src.QUESTION_ID
-                WHEN MATCHED THEN
-                    UPDATE SET ANSWER_VALUE = src.ANSWER_VALUE
-                WHEN NOT MATCHED THEN INSERT(
-                    PROSPECT_ID, QUESTION_ID, ANSWER_VALUE
-                ) VALUES (
-                    src.PROSPECT_ID, src.QUESTION_ID, src.ANSWER_VALUE
-                )
-                """)
-            conn.commit()
 
             st.session_state["q_index"] += 1
             st.rerun()
