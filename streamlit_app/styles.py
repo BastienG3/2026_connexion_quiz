@@ -755,6 +755,55 @@ GLOBAL_CSS = """
     }
   }
 
+  /* ----------------- MOBILE CARDS ----------------- */
+  @media (max-width: 768px) {
+
+    .maturity-card {
+      display: none !important;
+    }
+
+    .maturity-card.active {
+      display: flex !important;
+      width: 100% !important;
+      padding: 20px !important;
+      transform: none !important; 
+    }
+
+    .maturity-grid {
+      display: block !important;
+    }
+
+    .maturity-card:not(.active) {
+      animation: none !important;
+    }
+
+    .maturity-text {
+      font-size: 14px !important;
+      line-height: 1.5 !important;
+      margin-bottom: 10px;
+    }
+
+    .maturity-pitch {
+      font-size: 12.5px !important;
+      line-height: 1.45 !important;
+      opacity: 0.9;
+    }
+
+    
+    .maturity-card.active .maturity-title {
+      animation: none !important;
+      font-size: 18px !important; /* taille fixe */
+    }
+
+    .maturity-card.active .maturity-icon {
+      animation: none !important;
+      width: 64px !important;
+      height: 64px !important;
+    }
+
+
+  }
+
   /* =====================================================================
      MOBILE PHONE VIEWPORT RUNTIME OVERRIDES (Only triggers under 480px)
      ===================================================================== */
