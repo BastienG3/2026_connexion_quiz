@@ -42,6 +42,34 @@ def load_questions() -> list[dict]:
     cols = [col[0] for col in cursor.description]
     return [dict(zip(cols, row)) for row in rows]
 
+@st.cache_data
+def load_choices() -> dict[int, list[dict]]:
+    cursor = conn.cursor()
+    cursor.execute(f"""
+        SELECT *
+        FROM CHOICES
+    """)
+
+    rows = cursor.fetchall()
+    columns = [col.name if hasattr(col, 'name') else col for col in cursor.description]
+
+    choices_by_question = {}
+
+    for row in rows:
+        if isinstance(row, dict):
+            choice_dict = {key.name if hasattr(key, 'name') else key: val for key, val in row.items()}
+        else:
+            choice_dict = dict(zip(columns, row))
+        
+        q_id = choice_dict['QUESTION_ID']
+        
+        if q_id not in choices_by_question:
+            choices_by_question[q_id] = []
+            
+        choices_by_question[q_id].append(choice_dict)
+        
+    return choices_by_question
+
 
 @st.cache_data
 def load_result_bands():
@@ -52,7 +80,7 @@ def load_result_bands():
     return [dict(zip(cols, row)) for row in rows]
 
 
-@st.cache_data(ttl=60)
+#@st.cache_data(ttl=60)
 def load_prospect_count():
     cursor = conn.cursor()
     cursor.execute(
@@ -99,6 +127,7 @@ components.html(PLEXUS_HTML, height=0, width=0)
 
 # Load questions
 questions = load_questions()
+choices_db = load_choices()
 NB_QUESTIONS = len(questions)
 
 # TODO TO COMMENT -- DEBUG RESULT SCREEN
@@ -181,7 +210,7 @@ with st.container():
 
                     st.markdown(
                         f"""
-                        <div style="color: #888888; font-size: 14px; margin-top:10px;">
+                        <div style="color: #888888; font-size: 14px; margin-left:10px; margin-bottom:5px">
                         <i>{COUNTER_MSG}</i>
                         </div>
                         """,
@@ -296,7 +325,7 @@ with st.container():
                             font-weight: 500;
                             margin-top: 10px;
                         ">
-                            ✅ {csts.texts[lang]["saved_info_msg"]}
+                            {csts.texts[lang]["saved_info_msg"]}
                         </div>
                         """,
                         unsafe_allow_html=True,
@@ -407,14 +436,8 @@ with st.container():
         st.markdown(
             '<div class="kpc-fluid-answers-box kpc-answer-row">', unsafe_allow_html=True
         )
-        cursor.execute(f"""
-            SELECT *
-            FROM CHOICES
-            WHERE QUESTION_ID = {question_id}
-        """)
-        rows = cursor.fetchall()
-        columns = [col[0] for col in cursor.description]
-        choices_df = [dict(zip(columns, row)) for row in rows]
+
+        choices_df = choices_db.get(question_id, [])
 
         choice_labels = [c["CHOICE_TEXT_" + lang] for c in choices_df]
         choice_values = [c["VALUE"] for c in choices_df]
