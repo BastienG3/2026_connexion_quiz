@@ -511,4 +511,83 @@ with st.container():
             st.session_state["q_index"] += 1
             st.rerun()
 
+    # Handling for the back or nexr buttons
+    components.html("""
+    <script>
+    (function() {
+    let backOriginal = null;
+    let nextOriginal = null;
+
+    function fixLayout() {
+        const doc = window.parent.document;
+        const w = window.parent.innerWidth;
+
+        const backContainer = doc.querySelector('.st-key-back_btn');
+        const nextContainer = doc.querySelector('.st-key-next_btn');
+
+        if (backContainer) {
+        const p = backContainer.querySelector('p');
+        if (p) {
+            if (p.textContent !== '←' && p.textContent !== '→') backOriginal = p.textContent;
+            p.textContent = w < 480 ? '←' : (backOriginal || p.textContent);
+        }
+        }
+
+        if (nextContainer) {
+        const p = nextContainer.querySelector('p');
+        if (p) {
+            if (p.textContent !== '←' && p.textContent !== '→') nextOriginal = p.textContent;
+            p.textContent = w < 480 ? '→' : (nextOriginal || p.textContent);
+        }
+        }
+
+        if (backContainer && nextContainer) {
+        const backCol = backContainer.closest('[data-testid="stColumn"]');
+        const nextCol = nextContainer.closest('[data-testid="stColumn"]');
+
+        if (backCol && nextCol) {
+            // Find the shared stHorizontalBlock parent
+            const hBlock = backCol.closest('[data-testid="stHorizontalBlock"]');
+            if (hBlock) {
+            const cols = hBlock.querySelectorAll('[data-testid="stColumn"]');
+            if (w < 480) {
+                cols.forEach((col, i) => {
+                if (col === backCol || col === nextCol) {
+                    col.style.setProperty('flex', '1 1 0', 'important');
+                    col.style.setProperty('max-width', '50%', 'important');
+                    col.style.setProperty('min-width', '0', 'important');
+                    const btn = col.querySelector('button');
+                    if (btn) btn.style.setProperty('width', '100%', 'important');
+                } else {
+                    // Handling for the Spacer column
+                    col.style.setProperty('display', 'none', 'important');
+                    col.style.setProperty('flex', '0', 'important');
+                    col.style.setProperty('width', '0', 'important');
+                    col.style.setProperty('padding', '0', 'important');
+                }
+                });
+            } else {
+                // Restore on wide screens
+                cols.forEach(col => {
+                col.style.removeProperty('display');
+                col.style.removeProperty('flex');
+                col.style.removeProperty('max-width');
+                col.style.removeProperty('min-width');
+                col.style.removeProperty('width');
+                col.style.removeProperty('padding');
+                const btn = col.querySelector('button');
+                if (btn) btn.style.removeProperty('width');
+                });
+            }
+            }
+        }
+        }
+    }
+
+    setInterval(fixLayout, 300);
+    window.parent.addEventListener('resize', fixLayout);
+    fixLayout();
+    })();
+    </script>
+    """, height=0)
     st.markdown("</div>", unsafe_allow_html=True)

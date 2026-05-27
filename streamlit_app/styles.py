@@ -807,7 +807,7 @@ GLOBAL_CSS = """
   /* =====================================================================
      MOBILE PHONE VIEWPORT RUNTIME OVERRIDES (Only triggers under 480px)
      ===================================================================== */
-  @media (max-width: 480px) {
+  @media (max-width: 480px) or (max-height:480px){
     [data-testid="stAppViewContainer"],
     [data-testid="stMain"],
     [data-testid="stMainBlockContainer"] {
@@ -820,17 +820,17 @@ GLOBAL_CSS = """
       height: auto !important;
       max-height: none !important;
       display: block !important; 
-      padding-bottom: 40px !important; 
+      padding-bottom: 10px !important; 
     }
 
     .kpc-fluid-answers-box {
       overflow-y: visible !important; 
       height: auto !important;
-      margin-bottom: 24px;
+      margin-bottom: 15px;
     }
 
     .kpc-nav-row {
-      margin-top: 20px !important;
+      margin-top: 10px !important;
       position: relative !important; 
     }
   }
